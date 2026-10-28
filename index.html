@@ -11,7 +11,7 @@
   <header>
     <p class="eyebrow">Day 7 · Project 2 · fetch()</p>
     <h1>QuickNotes</h1>
-    <p>Load notes from the JSONPlaceholder API.</p>
+    <p>Load, create and delete notes against the JSONPlaceholder API.</p>
   </header>
 
   <main>
@@ -23,13 +23,33 @@
     </section>
 
     <section class="card">
+      <h2>New note</h2>
+      <!-- novalidate: we validate in JS so the message appears in #status -->
+      <form id="note-form" novalidate>
+        <div class="field">
+          <label for="title-input">Title <span class="hint">(required, max 100 characters)</span></label>
+          <input id="title-input" name="title" type="text" maxlength="100"
+                 placeholder="e.g. Grocery list" autocomplete="off">
+        </div>
+
+        <div class="field">
+          <label for="body-input">Body <span class="hint">(optional)</span></label>
+          <textarea id="body-input" name="body" rows="4"
+                    placeholder="Anything else you want to remember..."></textarea>
+        </div>
+
+        <button id="submit-btn" type="submit">Save note</button>
+      </form>
+    </section>
+
+    <section class="card">
       <h2>Notes</h2>
       <ul id="notes-list"></ul>
     </section>
   </main>
 
   <footer>
-    <p>Practice API: jsonplaceholder.typicode.com</p>
+    <p>Practice API: jsonplaceholder.typicode.com — the server does not really store what you create.</p>
   </footer>
 </body>
 </html>
