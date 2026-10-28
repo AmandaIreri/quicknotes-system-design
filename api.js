@@ -13,16 +13,20 @@ const bodyInput  = document.querySelector("#body-input");
 const submitBtn  = document.querySelector("#submit-btn");
 
 // The notes currently shown on the page.
+// JSONPlaceholder answers every POST with the same id (101), so we keep the
+// note objects themselves and remove by reference instead of by id.
 let notes = [];
 
 // Number of requests in flight. While this is above zero, every
-// button on the page is disabled.
+// button on the page is disabled (checklist: "buttons disabled while
+// requests run").
 let pendingRequests = 0;
 
 /* ------------------------------------------------------------------ */
 /* Small helpers                                                       */
 /* ------------------------------------------------------------------ */
 
+// Always textContent - never innerHTML - so API text can never inject markup.
 function setStatus(message, type = "") {
   statusText.textContent = message;
   statusText.classList.remove("success", "error");
@@ -35,6 +39,9 @@ function updateControls() {
   const busy = pendingRequests > 0;
   loadBtn.disabled = busy;
   submitBtn.disabled = busy;
+  for (const button of notesList.querySelectorAll(".delete-btn")) {
+    button.disabled = busy;
+  }
 }
 
 function beginRequest() {
@@ -60,6 +67,7 @@ async function request(url, options = {}) {
     throw error;
   }
 
+  // 204 No Content, and JSONPlaceholder's empty DELETE body, both give "".
   const text = await response.text();
   const data = text ? JSON.parse(text) : null;
 
@@ -81,13 +89,24 @@ function createNoteCard(note) {
   body.classList.add("note-body");
   body.textContent = note.body ? note.body : "No body text.";
 
+  const footer = document.createElement("div");
+  footer.classList.add("note-footer");
+
   const meta = document.createElement("span");
   meta.classList.add("note-meta");
   meta.textContent = note.createdHere
     ? `id ${note.id} · new in this session`
     : `id ${note.id}`;
 
-  li.append(title, body, meta);
+  const deleteBtn = document.createElement("button");
+  deleteBtn.type = "button";
+  deleteBtn.classList.add("delete-btn");
+  deleteBtn.textContent = "Delete";
+  deleteBtn.addEventListener("click", () => deleteNote(note));
+
+  footer.append(meta, deleteBtn);
+  li.append(title, body, footer);
+
   return li;
 }
 
@@ -172,7 +191,7 @@ async function createNote(event) {
     // JSONPlaceholder does not really save posts: it always answers
     // 201 with id 101. We still add the returned note to the top of the
     // list so the UI behaves the way it will against the real API, and we
-    // tag it as createdHere so a later Delete can explain the difference.
+    // tag it as createdHere so DELETE can explain the difference later.
     if (created) {
       created.createdHere = true;
       notes.unshift(created);
@@ -187,6 +206,41 @@ async function createNote(event) {
   } catch (error) {
     console.error(error);
     setStatus("Could not create the note. Please try again.", "error");
+  } finally {
+    endRequest();
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* DELETE - remove a note                                              */
+/* ------------------------------------------------------------------ */
+
+async function deleteNote(note) {
+  setStatus(`Deleting note ${note.id}...`);
+  beginRequest();
+
+  try {
+    await request(`${API_URL}/${note.id}`, { method: "DELETE" });
+
+    notes = notes.filter((item) => item !== note);
+    renderNotes();
+    setStatus(`Note ${note.id} deleted.`, "success");
+  } catch (error) {
+    console.error(error);
+
+    // JSONPlaceholder never actually stores the notes we POST, so deleting
+    // one answers 404. Rather than show a scary error for a note that was
+    // never on the server, we remove it from the page and say why.
+    if (note.createdHere && error.status === 404) {
+      notes = notes.filter((item) => item !== note);
+      renderNotes();
+      setStatus(
+        `Note ${note.id} only existed in this browser session, so it was removed from the list.`,
+        "success"
+      );
+    } else {
+      setStatus(`Could not delete note ${note.id}. Please try again.`, "error");
+    }
   } finally {
     endRequest();
   }
