@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuickNotes · API Client</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="api.js" defer></script>
+</head>
+<body>
+  <header>
+    <p class="eyebrow">Day 7 · Project 2 · fetch()</p>
+    <h1>QuickNotes</h1>
+    <p>Load notes from the JSONPlaceholder API.</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="controls">
+        <button id="load-btn" type="button">Load notes</button>
+      </div>
+      <p id="status" role="status">Press "Load notes" to fetch the ten most recent notes.</p>
+    </section>
+
+    <section class="card">
+      <h2>Notes</h2>
+      <ul id="notes-list"></ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>Practice API: jsonplaceholder.typicode.com</p>
+  </footer>
+</body>
+</html>
